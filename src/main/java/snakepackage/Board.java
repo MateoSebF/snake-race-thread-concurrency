@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.io.IOException;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
@@ -183,12 +184,15 @@ public class Board extends JLabel implements Observer {
 
 	private void drawSnake(Graphics g) {
 		for (int i = 0; i != SnakeApp.MAX_THREADS; i++) {
+			LinkedList<Cell> snakeBody = null;
 			synchronized (SnakeApp.getApp().snakes[i].getBody()) {
+				snakeBody = SnakeApp.getApp().snakes[i].getBody();
+				System.out.println(snakeBody==SnakeApp.getApp().snakes[i].getBody());
 				int color1 = SnakeApp.getApp().snakes[i].blue;
 				int color2 = SnakeApp.getApp().snakes[i].green;
-				for (Cell p : SnakeApp.getApp().snakes[i].getBody()) {
+				for (Cell p : snakeBody) {
 					//System.out.println("posicion " + p.getX() + " " + p.getY());
-					if (p.equals(SnakeApp.getApp().snakes[i].getBody().peekFirst())) {
+					if (p.equals(snakeBody.peekFirst())) {
 						//System.out.println(" en el if");
 						g.setColor(new Color(050 + (i * 10), color1 + 50, color2));
 						g.fillRect(p.getX() * GridSize.WIDTH_BOX, p.getY()
@@ -206,7 +210,6 @@ public class Board extends JLabel implements Observer {
 								GridSize.HEIGH_BOX);
 
 					}
-
 				}
 			}
 		}

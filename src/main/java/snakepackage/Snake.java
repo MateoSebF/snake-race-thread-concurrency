@@ -5,6 +5,7 @@ import java.util.Observable;
 import java.util.Random;
 
 import enums.Direction;
+import enums.GameState;
 import enums.GridSize;
 
 public class Snake extends Observable implements Runnable {
@@ -28,13 +29,14 @@ public class Snake extends Observable implements Runnable {
     public boolean goal = false;
     public int green;
     public int blue;
-
-    public Snake(int idt, Cell head, int direction) {
+    public Object lock;
+    public Snake(int idt, Cell head, int direction, Object lock) {
         this.idt = idt;
         this.direction = direction;
         Random r = new Random();
         green = r.nextInt(200);
         blue = r.nextInt(200);
+        this.lock = lock;
         generateSnake(head);
 
     }
@@ -53,7 +55,12 @@ public class Snake extends Observable implements Runnable {
     @Override
     public void run() {
         while (!snakeEnd) {
-            
+            try{
+                lock.wait();
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             snakeCalc();
 
             //NOTIFY CHANGES TO GUI
@@ -71,10 +78,8 @@ public class Snake extends Observable implements Runnable {
             }
 
         }
-        
         fixDirection(head);
-        
-        
+
     }
 
     private void snakeCalc() {
@@ -90,8 +95,8 @@ public class Snake extends Observable implements Runnable {
         checkIfFood(newCell);
         checkIfJumpPad(newCell);
         checkIfTurboBoost(newCell);
-        checkIfBarrier(newCell);
     }
+        checkIfBarrier(newCell);
     synchronized (snakeBody){
         snakeBody.push(newCell);
 
