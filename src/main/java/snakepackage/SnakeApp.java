@@ -60,7 +60,7 @@ public class SnakeApp {
         actionsBPabel.setLayout(new FlowLayout());
         action = new Button("Start the game");
         action.setBackground(new Color(89, 198, 193));
-        action.setPreferredSize(new Dimension(200, 50));
+        action.setPreferredSize(new Dimension(150, 50));
         actionsBPabel.add(action);
         frame.add(actionsBPabel, BorderLayout.SOUTH);
         action.addActionListener(new ActionListener() {
