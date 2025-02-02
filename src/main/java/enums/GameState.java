@@ -1,5 +1,5 @@
 package enums;
 
 public enum GameState {
-    STARTED, PAUSED, RUNNING;
+    STARTED, PAUSED, RUNNING, ENDED;
 }

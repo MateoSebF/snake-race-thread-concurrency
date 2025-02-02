@@ -35,7 +35,7 @@ public class Board extends JLabel implements Observer {
 	public Board() {
 		if ((NR_BARRIERS + NR_JUMP_PADS + NR_FOOD + NR_TURBO_BOOSTS) > GridSize.GRID_HEIGHT
 				* GridSize.GRID_WIDTH)
-			throw new IllegalArgumentException(); 
+			throw new IllegalArgumentException();
 		GenerateBoard();
 		GenerateFood();
 		GenerateBarriers();
@@ -73,7 +73,7 @@ public class Board extends JLabel implements Observer {
 		for (int i = 0; i != GridSize.GRID_WIDTH; i++) {
 			for (int j = 0; j != GridSize.GRID_HEIGHT; j++) {
 				gameboard[i][j] = new Cell(i, j);
-				//System.out.println(" ins " + gameboard[i][j]);
+				// System.out.println(" ins " + gameboard[i][j]);
 			}
 		}
 
@@ -118,7 +118,7 @@ public class Board extends JLabel implements Observer {
 
 	private void drawTurboBoosts(Graphics g) {
 		Image light = null;
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/lightning.png");
+		InputStream resource = ClassLoader.getSystemResourceAsStream("Img/lightning.png");
 		try {
 			light = ImageIO.read(resource);
 		} catch (IOException e) {
@@ -132,10 +132,10 @@ public class Board extends JLabel implements Observer {
 
 	private void drawJumpPads(Graphics g) {
 		Image jump = null;
-                
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/up.png");
 
-                try {
+		InputStream resource = ClassLoader.getSystemResourceAsStream("Img/up.png");
+
+		try {
 			jump = ImageIO.read(resource);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -149,10 +149,10 @@ public class Board extends JLabel implements Observer {
 	private void drawBarriers(Graphics g) {
 
 		Image firewall = null;
-                
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/firewall.png");
 
-                try {
+		InputStream resource = ClassLoader.getSystemResourceAsStream("Img/firewall.png");
+
+		try {
 			firewall = ImageIO.read(resource);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -168,17 +168,17 @@ public class Board extends JLabel implements Observer {
 
 	private void drawFood(Graphics g) {
 		Image mouse = null;
-                InputStream resource=ClassLoader.getSystemResourceAsStream("Img/mouse.png");
-		
+		InputStream resource = ClassLoader.getSystemResourceAsStream("Img/mouse.png");
+
 		try {
 			mouse = ImageIO.read(resource);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		for (Cell c : food){
-		g.drawImage(mouse, c.getX() * GridSize.WIDTH_BOX, c.getY()
-				* GridSize.HEIGH_BOX, this);
+		for (Cell c : food) {
+			g.drawImage(mouse, c.getX() * GridSize.WIDTH_BOX, c.getY()
+					* GridSize.HEIGH_BOX, this);
 		}
 	}
 
@@ -187,26 +187,26 @@ public class Board extends JLabel implements Observer {
 			LinkedList<Cell> snakeBody = null;
 			synchronized (SnakeApp.getApp().snakes[i].getBody()) {
 				snakeBody = SnakeApp.getApp().snakes[i].getBody();
-				System.out.println(snakeBody==SnakeApp.getApp().snakes[i].getBody());
-				int color1 = SnakeApp.getApp().snakes[i].blue;
-				int color2 = SnakeApp.getApp().snakes[i].green;
+				int color0 = SnakeApp.getApp().snakes[i].red;
+				int color1 = SnakeApp.getApp().snakes[i].green;
+				int color2 = SnakeApp.getApp().snakes[i].blue;
 				for (Cell p : snakeBody) {
-					//System.out.println("posicion " + p.getX() + " " + p.getY());
+					// System.out.println("posicion " + p.getX() + " " + p.getY());
 					if (p.equals(snakeBody.peekFirst())) {
-						//System.out.println(" en el if");
-						g.setColor(new Color(050 + (i * 10), color1 + 50, color2));
+						// System.out.println(" en el if");
+						g.setColor(new Color(color0 + 50, color1 + 50, color2));
 						g.fillRect(p.getX() * GridSize.WIDTH_BOX, p.getY()
-										* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,
+								* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,
 								GridSize.HEIGH_BOX);
 
 					} else {
-						//System.out.println(" en el else" + i);
+						// System.out.println(" en el else" + i);
 						if (SnakeApp.getApp().snakes[i].isSelected()) {
-							g.setColor(new Color(032, color1, color2));
+							g.setColor(new Color(color0, color1, color2));
 						} else
-							g.setColor(new Color(034, color1, color2));
+							g.setColor(new Color(color0, color1, color2));
 						g.fillRect(p.getX() * GridSize.WIDTH_BOX, p.getY()
-										* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,
+								* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,
 								GridSize.HEIGH_BOX);
 
 					}

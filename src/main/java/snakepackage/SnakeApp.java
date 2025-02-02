@@ -24,23 +24,24 @@ public class SnakeApp {
     public static final int MAX_THREADS = 8;
     Snake[] snakes = new Snake[MAX_THREADS];
     private static final Cell[] spawn = {
-        new Cell(1, (GridSize.GRID_HEIGHT / 2) / 2),
-        new Cell(GridSize.GRID_WIDTH - 2,
-        3 * (GridSize.GRID_HEIGHT / 2) / 2),
-        new Cell(3 * (GridSize.GRID_WIDTH / 2) / 2, 1),
-        new Cell((GridSize.GRID_WIDTH / 2) / 2, GridSize.GRID_HEIGHT - 2),
-        new Cell(1, 3 * (GridSize.GRID_HEIGHT / 2) / 2),
-        new Cell(GridSize.GRID_WIDTH - 2, (GridSize.GRID_HEIGHT / 2) / 2),
-        new Cell((GridSize.GRID_WIDTH / 2) / 2, 1),
-        new Cell(3 * (GridSize.GRID_WIDTH / 2) / 2,
-        GridSize.GRID_HEIGHT - 2)};
+            new Cell(1, (GridSize.GRID_HEIGHT / 2) / 2),
+            new Cell(GridSize.GRID_WIDTH - 2,
+                    3 * (GridSize.GRID_HEIGHT / 2) / 2),
+            new Cell(3 * (GridSize.GRID_WIDTH / 2) / 2, 1),
+            new Cell((GridSize.GRID_WIDTH / 2) / 2, GridSize.GRID_HEIGHT - 2),
+            new Cell(1, 3 * (GridSize.GRID_HEIGHT / 2) / 2),
+            new Cell(GridSize.GRID_WIDTH - 2, (GridSize.GRID_HEIGHT / 2) / 2),
+            new Cell((GridSize.GRID_WIDTH / 2) / 2, 1),
+            new Cell(3 * (GridSize.GRID_WIDTH / 2) / 2,
+                    GridSize.GRID_HEIGHT - 2) };
     private JFrame frame;
     private static Board board;
     int nr_selected = 0;
     Thread[] thread = new Thread[MAX_THREADS];
     Button action;
     public static GameState gameState = GameState.STARTED;
-    public Object lock;
+    public static Object lock = new Object();
+
     public SnakeApp() {
         Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
         frame = new JFrame("The Snake Race");
@@ -52,85 +53,119 @@ public class SnakeApp {
         frame.setLocation(dimension.width / 2 - frame.getWidth() / 2,
                 dimension.height / 2 - frame.getHeight() / 2);
         board = new Board();
-        
-        
-        frame.add(board,BorderLayout.CENTER);
-        
-        JPanel actionsBPabel=new JPanel();
+
+        frame.add(board, BorderLayout.CENTER);
+
+        JPanel actionsBPabel = new JPanel();
         actionsBPabel.setLayout(new FlowLayout());
-        action = new Button("Action");
+        action = new Button("Start the game");
+        action.setBackground(new Color(89, 198, 193));
+        action.setPreferredSize(new Dimension(200, 50));
         actionsBPabel.add(action);
-        frame.add(actionsBPabel,BorderLayout.SOUTH);
+        frame.add(actionsBPabel, BorderLayout.SOUTH);
         action.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 switch (gameState) {
                     case STARTED:
                         app.runGame();
+                        action.setLabel("Pause the game");
                         break;
                     case RUNNING:
                         app.pauseGame();
+                        action.setLabel("Resume the game");
                         break;
                     case PAUSED:
                         app.resumeGame();
+                        action.setLabel("Pause the game");
                         break;
                 }
             }
         });
 
     }
-    public void pauseGame(){
-        synchronized (lock){
+
+    public void pauseGame() {
+        long lowestTime = 1000000000;
+        int lowestThread = -1;
+        int longestSize = 0;
+        int longestThread = -1;
+        for (int i = 0; i != MAX_THREADS; i++) {
+            long timeAlive = snakes[i].getDuration();
+            if (snakes[i].isSnakeEnd() && lowestTime > timeAlive) {
+                lowestTime = timeAlive;
+                lowestThread = i;
+            }
+            if (!snakes[i].isSnakeEnd() && snakes[i].getBody().size() > longestSize) {
+                longestSize = snakes[i].getBody().size();
+                longestThread = i;
+            }
+        }
+        System.out.println("The longest snake is: " + longestThread);
+        System.out.println("The worst snake is: " + lowestThread);
+        if (longestThread != -1)
+            snakes[longestThread].setIsTheBest();
+
+        if (lowestThread != -1)
+            snakes[lowestThread].setIsTheWorst();
+        synchronized (lock) {
             gameState = GameState.PAUSED;
         }
+        board.repaint();
     }
-    public void resumeGame(){
-        synchronized (lock){
+
+    public void resumeGame() {
+        for (int i = 0; i != MAX_THREADS; i++) {
+            snakes[i].setNormal();
+        }
+        synchronized (lock) {
             gameState = GameState.RUNNING;
             lock.notifyAll();
         }
+        board.repaint();
     }
-    public void runGame(){
+
+    public void runGame() {
         for (int i = 0; i != MAX_THREADS; i++) {
             thread[i].start();
         }
         gameState = GameState.RUNNING;
     }
+
     public static void main(String[] args) {
         app = new SnakeApp();
         app.init();
     }
 
     private void init() {
-        lock = new Object();
         for (int i = 0; i != MAX_THREADS; i++) {
-            snakes[i] = new Snake(i + 1, spawn[i], i + 1, lock);
+            snakes[i] = new Snake(i + 1, spawn[i], i + 1);
             snakes[i].addObserver(board);
             thread[i] = new Thread(snakes[i]);
         }
 
         frame.setVisible(true);
 
-            
-//        while (true) {
-//            int x = 0;
-//            for (int i = 0; i != MAX_THREADS; i++) {
-//                if (snakes[i].isSnakeEnd() == true) {
-//                    x++;
-//                }
-//            }
-//            if (x == MAX_THREADS) {
-//                break;
-//            }
-//        }
-
-
-//        System.out.println("Thread (snake) status:");
-//        for (int i = 0; i != MAX_THREADS; i++) {
-//            System.out.println("["+i+"] :"+thread[i].getState());
-//        }
-        
-
+        while (gameState == GameState.RUNNING || GameState.ENDED != gameState) {
+            int x = 0;
+            for (int i = 0; i != MAX_THREADS; i++) {
+                if (snakes[i].isSnakeEnd() == true) {
+                    x++;
+                }
+            }
+            if (x == MAX_THREADS) {
+                gameState = GameState.ENDED;
+                break;
+            }
+        }
+        if (gameState == GameState.ENDED) {
+            System.out.println("Game Over");
+            System.out.println("Thread (snake) status:");
+            for (int i = 0; i != MAX_THREADS; i++) {
+                System.out.println("[" + i + "] :" + thread[i].getState());
+            }
+        }
+        System.exit(0);
     }
 
     public static SnakeApp getApp() {
