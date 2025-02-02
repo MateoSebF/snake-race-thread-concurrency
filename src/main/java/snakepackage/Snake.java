@@ -26,10 +26,15 @@ public class Snake extends Observable implements Runnable {
     private boolean isSelected = false;
     private int growing = 0;
     public boolean goal = false;
+    public int green;
+    public int blue;
 
     public Snake(int idt, Cell head, int direction) {
         this.idt = idt;
         this.direction = direction;
+        Random r = new Random();
+        green = r.nextInt(200);
+        blue = r.nextInt(200);
         generateSnake(head);
 
     }
@@ -57,9 +62,9 @@ public class Snake extends Observable implements Runnable {
 
             try {
                 if (hasTurbo == true) {
-                    Thread.sleep(500 / 3);
+                    Thread.sleep(10 / 3);
                 } else {
-                    Thread.sleep(500);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -81,11 +86,13 @@ public class Snake extends Observable implements Runnable {
         
         randomMovement(newCell);
 
+    synchronized (newCell){
         checkIfFood(newCell);
         checkIfJumpPad(newCell);
         checkIfTurboBoost(newCell);
         checkIfBarrier(newCell);
-        
+    }
+    synchronized (snakeBody){
         snakeBody.push(newCell);
 
         if (growing <= 0) {
@@ -95,6 +102,9 @@ public class Snake extends Observable implements Runnable {
         } else if (growing != 0) {
             growing--;
         }
+    }
+
+
 
     }
 
