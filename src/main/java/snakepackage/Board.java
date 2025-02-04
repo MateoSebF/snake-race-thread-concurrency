@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.io.IOException;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
@@ -16,6 +15,7 @@ import javax.swing.JLabel;
 import enums.GridSize;
 import java.io.InputStream;
 
+@SuppressWarnings("deprecation")
 public class Board extends JLabel implements Observer {
 
 	private static final long serialVersionUID = 1L;
@@ -191,9 +191,7 @@ public class Board extends JLabel implements Observer {
 				int color1 = SnakeApp.getApp().snakes[i].green;
 				int color2 = SnakeApp.getApp().snakes[i].blue;
 				for (Cell p : snakeBody) {
-					// System.out.println("posicion " + p.getX() + " " + p.getY());
 					if (p.equals(snakeBody.peekFirst())) {
-						// System.out.println(" en el if");
 						g.setColor(new Color(color0 + 50, color1 + 50, color2));
 						g.fillRect(p.getX() * GridSize.WIDTH_BOX, p.getY()
 								* GridSize.HEIGH_BOX, GridSize.WIDTH_BOX,

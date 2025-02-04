@@ -9,9 +9,7 @@ import enums.GridSize;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JButton;
+import java.util.concurrent.CountDownLatch;
 import javax.swing.JPanel;
 
 /**
@@ -21,7 +19,7 @@ import javax.swing.JPanel;
 public class SnakeApp {
 
     private static SnakeApp app;
-    public static final int MAX_THREADS = 8;
+    public static final int MAX_THREADS = 4;
     Snake[] snakes = new Snake[MAX_THREADS];
     private static final Cell[] spawn = {
             new Cell(1, (GridSize.GRID_HEIGHT / 2) / 2),
@@ -41,6 +39,7 @@ public class SnakeApp {
     Button action;
     public static GameState gameState = GameState.STARTED;
     public static Object lock = new Object();
+    private CountDownLatch countDownLatch = new CountDownLatch(MAX_THREADS);
 
     public SnakeApp() {
         Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
@@ -78,6 +77,8 @@ public class SnakeApp {
                     case PAUSED:
                         app.resumeGame();
                         action.setLabel("Pause the game");
+                        break;
+                    case ENDED:
                         break;
                 }
             }
@@ -137,26 +138,21 @@ public class SnakeApp {
         app.init();
     }
 
+    @SuppressWarnings("deprecation")
     private void init() {
         for (int i = 0; i != MAX_THREADS; i++) {
-            snakes[i] = new Snake(i + 1, spawn[i], i + 1);
+            snakes[i] = new Snake(i + 1, spawn[i], i + 1, countDownLatch);
             snakes[i].addObserver(board);
             thread[i] = new Thread(snakes[i]);
         }
 
         frame.setVisible(true);
 
-        while (gameState == GameState.RUNNING || GameState.ENDED != gameState) {
-            int x = 0;
-            for (int i = 0; i != MAX_THREADS; i++) {
-                if (snakes[i].isSnakeEnd() == true) {
-                    x++;
-                }
-            }
-            if (x == MAX_THREADS) {
-                gameState = GameState.ENDED;
-                break;
-            }
+        try {
+            countDownLatch.await();
+            gameState = GameState.ENDED;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         if (gameState == GameState.ENDED) {
             System.out.println("Game Over");

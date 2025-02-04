@@ -3,11 +3,13 @@ package snakepackage;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 import enums.Direction;
 import enums.GameState;
 import enums.GridSize;
 
+@SuppressWarnings("deprecation")
 public class Snake extends Observable implements Runnable {
 
     private int idt;
@@ -15,6 +17,7 @@ public class Snake extends Observable implements Runnable {
     private Cell newCell;
     private LinkedList<Cell> snakeBody = new LinkedList<Cell>();
     // private Cell objective = null;
+    @SuppressWarnings("unused")
     private Cell start = null;
 
     private boolean snakeEnd = false;
@@ -23,6 +26,7 @@ public class Snake extends Observable implements Runnable {
     private final int INIT_SIZE = 3;
 
     private boolean hasTurbo = false;
+    @SuppressWarnings("unused")
     private int jumps = 0;
     private boolean isSelected = false;
     private int growing = 0;
@@ -32,8 +36,9 @@ public class Snake extends Observable implements Runnable {
     public int blue;
     private long timeOfCreation;
     private long timeOfDead;
+    private CountDownLatch countDownLatch;
 
-    public Snake(int idt, Cell head, int direction) {
+    public Snake(int idt, Cell head, int direction, CountDownLatch countDownLatch) {
         this.idt = idt;
         this.direction = direction;
         // Random r = new Random();
@@ -44,6 +49,7 @@ public class Snake extends Observable implements Runnable {
         blue = 44;
         this.timeOfCreation = System.currentTimeMillis();
         generateSnake(head);
+        this.countDownLatch= countDownLatch;
     }
 
     public boolean isSnakeEnd() {
@@ -62,7 +68,7 @@ public class Snake extends Observable implements Runnable {
         while (!snakeEnd) {
             synchronized (SnakeApp.lock) {
                 try {
-                    if (SnakeApp.gameState == GameState.PAUSED) {
+                    while (SnakeApp.gameState == GameState.PAUSED) {
                         SnakeApp.lock.wait();
                     }
                 } catch (InterruptedException e) {
@@ -76,11 +82,12 @@ public class Snake extends Observable implements Runnable {
             setChanged();
             notifyObservers();
 
+            int timeInMilis = 100;
             try {
                 if (hasTurbo == true) {
-                    Thread.sleep(500 / 3);
+                    Thread.sleep(timeInMilis / 3);
                 } else {
-                    Thread.sleep(500);
+                    Thread.sleep(timeInMilis);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -89,6 +96,8 @@ public class Snake extends Observable implements Runnable {
         }
         timeOfDead = System.currentTimeMillis();
         fixDirection(head);
+
+        countDownLatch.countDown();
     }
 
     public long getDuration() {
@@ -174,6 +183,7 @@ public class Snake extends Observable implements Runnable {
         return newCell;
     }
 
+    @SuppressWarnings("unused")
     private boolean checkIfOwnBody(Cell newCell) {
         for (Cell c : snakeBody) {
             if (newCell.getX() == c.getX() && newCell.getY() == c.getY()) {

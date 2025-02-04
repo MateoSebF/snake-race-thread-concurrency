@@ -1,0 +1,24 @@
+Análisis condiciones de carrera:
+Las condiciones de carrera, según su definición, son situaciones en las que varios hilos compiten por acceder a un mismo recurso compartido. Esto puede ocasionar que el resultado del programa varíe dependiendo del orden de ejecución de los hilos.
+
+En el programa de Snake, encontramos varias condiciones de carrera, entre ellas:
+
+	- Food: La primera condición de carrera que podemos identificar es en relación a los ratones. Al analizar el código, observamos que cuando una serpiente come un ratón, este se elimina de la posición actual y aparece en una nueva ubicación del mapa. El problema surge cuando dos o más serpientes intentan comer el mismo ratón simultáneamente. Dado que estas acciones se ejecutan de manera concurrente, existe el riesgo de que ambas serpientes coman el ratón al mismo tiempo. Esto no solo resulta en un comportamiento inesperado, sino que también provoca que por cada serpiente que consuma un ratón, se cree un nuevo ratón, generando un ciclo de creación de comida que no debería ocurrir.
+
+	- JumpPads y TurboBoost: Estos dos elementos presentan un comportamiento similar. Cuando una serpiente los atraviesa, se activa una acción especial y, posteriormente, desaparecen del campo de juego. En este caso, las serpientes compiten por quién consume el recurso primero, lo que puede generar una condición de carrera. Es necesario controlar este comportamiento para evitar que ambas serpientes consuman el recurso al mismo tiempo.
+
+	- DrawSnake: Al profundizar en el código, podemos observar que se implementa el patrón observador, donde la serpiente es el objeto observable y el tablero (Board) es el observador. Cada vez que la serpiente cambia de estado, se llama al método notifyObservers(), lo que notifica al tablero para que se repinte. Sin embargo, dado que cada serpiente mueve su posición y notifica al tablero, puede haber una carrera entre las serpientes para determinar quién logra que el tablero se repinte primero.
+
+Análisis del mal uso de las colecciones:
+
+Para analizar el mal uso de las colecciones, seguimos la recomendación de aumentar la velocidad de las serpientes y ejecutar varios juegos en paralelo. Esto nos permitió identificar un caso que conduce a un error en el código, relacionado con la forma en que se maneja y se repinta el cuerpo de las serpientes.
+
+El problema radica en que el cuerpo de la serpiente está representado por una LinkedList de celdas. Como mencionamos anteriormente, cada vez que una serpiente cambia de posición, notifica al tablero para que se repinte. Durante el proceso de repintado, el tablero itera sobre las serpientes y, a su vez, sobre su LinkedList para pintar cada una de las celdas que componen el cuerpo de la serpiente.
+
+El error ocurre cuando el repintado del tablero se ejecuta de manera concurrente con la modificación de la LinkedList de una serpiente. Esto provoca que el tablero esté iterando sobre una LinkedList mientras la serpiente está modificando su contenido (agregando o eliminando celdas). En este escenario, se genera una excepción de concurrencia, ya que no es posible iterar sobre una colección mientras se está modificando. Este tipo de error impide que la iteración continúe correctamente, lo cual debe ser corregido para evitar fallos en la ejecución del programa.
+
+Analises de uso innecesario de eseperas activas:
+
+Para realizar este análisis, nos enfocamos en la clase SnakeApp y en la forma en que valida si una partida ha terminado o no. Actualmente, para determinar el final del juego, el programa itera constantemente sobre todas las serpientes, verificando si están vivas o muertas. Si todas las serpientes han muerto, se considera que la partida ha finalizado.
+
+El problema con esta implementación es que el bucle encargado de esta validación se ejecuta indefinidamente hasta que la partida termine, lo que genera una espera activa. Es decir, el hilo principal está continuamente verificando el estado de las serpientes sin realizar un trabajo útil en ese tiempo, lo que provoca un consumo innecesario de CPU.
